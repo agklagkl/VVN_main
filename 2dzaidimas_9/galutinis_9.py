@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+import csv
 
 pygame.init()
 
@@ -17,7 +18,11 @@ FPS = 60
 
 #define game variables
 GRAVITY = 0.75
-TILE_SIZE = 40
+ROWS = 16
+COLS = 150
+TILE_SIZE = SCREEN_HEIGHT // ROWS
+TILE_TYPES = 17
+level = 0
 
 #define player action variables
 moving_left = False
@@ -417,6 +422,10 @@ enemy = Soldier('enemy', 500, 200, 1.65, 2, 20, 0)
 enemy2 = Soldier('enemy', 300, 200, 1.65, 2, 20, 0)
 enemy_group.add(enemy)
 enemy_group.add(enemy2)
+
+#sukurti tuscia tile lista
+world_data = []
+r = [-1] * COLS
 
 
 run = True
