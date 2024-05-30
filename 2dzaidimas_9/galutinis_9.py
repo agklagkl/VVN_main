@@ -22,7 +22,7 @@ ROWS = 16
 COLS = 150
 TILE_SIZE = SCREEN_HEIGHT // ROWS
 TILE_TYPES = 17
-level = 0
+level = 1
 
 #define player action variables
 moving_left = False
@@ -33,6 +33,12 @@ grenade_thrown = False
 
 
 #load images
+#tile sudet i lista
+img_list = []
+for x in range(TILE_TYPES):
+    img = pygame.image.load(f'2dzaidimas_9/fonas2/{x}.png')
+    img = pygame.transform.scale(img, (TILE_SIZE, TILE_SIZE))
+    img_list.append(img)
 #bullet
 bullet_img = pygame.image.load('2dzaidimas_9/bullet/bullet.png').convert_alpha()
 #grenade
@@ -244,7 +250,48 @@ class Soldier(pygame.sprite.Sprite):
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
+class World():
+    def __init__(self):
+        self.obstacle_list = []
 
+    def process_data(self, data):
+        #iterate kiekviena skaiciu fono (csv) file
+        for y, row in enumerate(data):
+            for x, tile in enumerate(row):
+                if tile >= 0:
+                    img = img_list[tile]
+                    img_rect = img.get_rect()
+                    img_rect.x = x * TILE_SIZE
+                    img_rect.y = y * TILE_SIZE
+                    tile_data = (img, img_rect)
+                    if tile >= 0 and tile <= 8 and tile >= 12 and tile <= 14:
+                        self.obstacle_list.append(tile_data)
+                    elif tile == 15: #sukurti zaideja
+                        player = Soldier('player', x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5)
+                        health_bar = HealthBar(10, 10, player.health, player.health)
+                    elif tile == 16:#sukurti priesus
+                        enemy = Soldier('enemy', 500, 200, 1.65, 2, 20, 0)
+                        enemy_group.add(enemy)
+                    elif tile == 11: #ammo dezute
+                        item_box = ItemBox('Ammo', x * TILE_SIZE, y * TILE_SIZE)
+                        item_box_group.add(item_box)
+                    elif tile == 10: #granatos
+                        item_box = ItemBox('Grenade', x * TILE_SIZE, y * TILE_SIZE)
+                        item_box_group.add(item_box)
+                    elif tile == 9: #gyvybes
+                        item_box = ItemBox('Health', x * TILE_SIZE, y * TILE_SIZE)
+                        item_box_group.add(item_box)
+                    elif tile == 17: #pereiti
+                        pass
+
+        return player, health_bar
+    
+    def draw(self):
+        for tile in self.obstacle_list:
+            screen.blit(tile[0], tile[1])
+
+
+                        
 
 class ItemBox(pygame.sprite.Sprite):
     def __init__(self, item_type, x, y):
@@ -404,28 +451,24 @@ item_box_group = pygame.sprite.Group()
 
 
 
-#temp - create item boxes
-item_box = ItemBox('Health', 600, 260)
-item_box_group.add(item_box)
-item_box = ItemBox('Ammo', 400, 260)
-item_box_group.add(item_box)
-item_box = ItemBox('Grenade', 500, 260)
-item_box_group.add(item_box)
 
 
 
-player = Soldier('player', 200, 200, 1.65, 5, 20, 5)
-health_bar = HealthBar(10, 10, player.health, player.health)
-
-
-enemy = Soldier('enemy', 500, 200, 1.65, 2, 20, 0)
-enemy2 = Soldier('enemy', 300, 200, 1.65, 2, 20, 0)
-enemy_group.add(enemy)
-enemy_group.add(enemy2)
 
 #sukurti tuscia tile lista
 world_data = []
-r = [-1] * COLS
+for row in range (ROWS):
+    r = [-1] * COLS
+    world_data.append(r)
+#load leveliu info ir sukurti zemelapi
+with open(f'2dzaidimas_9/level{level}_data.csv', newline='') as csvfile:
+    reader = csv.reader(csvfile, delimiter=',')
+    for x, row in enumerate(reader):
+        for y, tile in enumerate(row):
+            world_data[x][y] = int(tile)
+
+world = World()
+player, health_bar = world.process_data(world_data) 
 
 
 run = True
@@ -433,7 +476,10 @@ while run:
 
     clock.tick(FPS)
 
+    #updatinti bg
     draw_bg()
+    #nupiesti zemelapi
+    world.draw()
     #show player health
     health_bar.draw(player.health)
     #show ammo
