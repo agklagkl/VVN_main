@@ -11,15 +11,15 @@ SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption('VVN')
 
-#set framerate
+#nustatyti kadro dažnį/greitį
 clock = pygame.time.Clock()
 FPS = 60
 
-#define game variables
+#apibrėžti žaidimo kintamuosius
 GRAVITY = 0.75
 TILE_SIZE = 40
 
-#define player action variables
+#apibrėžti veikėjo vaiksmų kintamuosius
 moving_left = False
 moving_right = False
 shoot = False
@@ -27,12 +27,12 @@ grenade = False
 grenade_thrown = False
 
 
-#load images
-#bullet
+#įkelti nuotraukas
+#kulkos
 bullet_img = pygame.image.load('2dzaidimas_9/bullet/bullet.png').convert_alpha()
-#grenade
+#grenata
 grenade_img = pygame.image.load('2dzaidimas_9/grenade/grenade.png').convert_alpha()
-#pick up boxes
+#surinkti dėžutes
 health_box_img = pygame.image.load('2dzaidimas_9/collect/health/healthbox.png').convert_alpha()
 ammo_box_img = pygame.image.load('2dzaidimas_9/collect/ammo/ammo.png').convert_alpha()
 grenade_box_img = pygame.image.load('2dzaidimas_9/collect/grenade/grenade.png').convert_alpha()
@@ -43,14 +43,14 @@ item_boxes = {
 }
 
 
-#define colours
+#apibrėžti spalvas
 BG = (255, 255, 255)
 RED = (255, 0, 0)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 
-#define font
+#apibrėžti šriftas
 font = pygame.font.SysFont('Futura', 30)
 
 def draw_text(text, font, text_col, x, y):
@@ -84,18 +84,18 @@ class Soldier(pygame.sprite.Sprite):
         self.frame_index = 0
         self.action = 0
         self.update_time = pygame.time.get_ticks()
-        #ai specific variables
+        #ai specifiniai kintamieji
         self.move_counter = 0
         self.vision = pygame.Rect(0, 0, 150, 20)
         self.idling = False
         self.idling_counter = 0
         
-        #load all images for the players
+        #ikelti visas nuotraukams veikėjų
         animation_types = ['vietoj', 'eina', 'soka', 'numire']
         for animation in animation_types:
-            #reset temporary list of images
+            #išnaujo nustatyti laikiną vaizdų sąrašą
             temp_list = []
-            #count number of files in the folder
+            #suskaičiuoti kiek yra failų aplanke
             num_of_frames = len(os.listdir(f'2dzaidimas_9/{self.char_type}/{animation}'))
             for i in range(num_of_frames):
                 img = pygame.image.load(f'2dzaidimas_9/{self.char_type}/{animation}/{i}.png').convert_alpha()
@@ -111,17 +111,17 @@ class Soldier(pygame.sprite.Sprite):
     def update(self):
         self.update_animation()
         self.check_alive()
-        #update cooldown
+        #atnaujinti cooldown
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
 
     def move(self, moving_left, moving_right):
-        #reset movement variables
+        #iš naujo nustatyti judėjimo kintamuosius
         dx = 0
         dy = 0
 
-        #assign movement variables if moving left or right
+        #nustatyti judėjimo kintamuosius į dešinę ir į kairę
         if moving_left:
             dx = -self.speed
             self.flip = True
@@ -131,24 +131,24 @@ class Soldier(pygame.sprite.Sprite):
             self.flip = False
             self.direction = 1
 
-        #jump
+        #šokti
         if self.jump == True and self.in_air == False:
             self.vel_y = -11
             self.jump = False
             self.in_air = True
 
-        #apply gravity
+        #pritaikyti gravitaciją
         self.vel_y += GRAVITY
         if self.vel_y > 10:
             self.vel_y
         dy += self.vel_y
 
-        #check collision with floor
+        #peržiūrėti susidūrimą su grindimis
         if self.rect.bottom + dy > 300:
             dy = 300 - self.rect.bottom
             self.in_air = False
 
-        #update rectangle position
+        #atnaujinti stačiakampio poziciją
         self.rect.x += dx
         self.rect.y += dy
 
@@ -158,7 +158,7 @@ class Soldier(pygame.sprite.Sprite):
             self.shoot_cooldown = 20
             bullet = Bullet(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction), self.rect.centery, self.direction)
             bullet_group.add(bullet)
-            #reduce ammo
+            #sumažinti kulkų skaičių
             self.ammo -= 1
 
 
@@ -170,9 +170,9 @@ class Soldier(pygame.sprite.Sprite):
                 self.idling_counter = 50
             #check if the ai in near the player
             if self.vision.colliderect(player.rect):
-                #stop running and face the player
+                #nustoti bėgti ir atsisukti į žaidėją
                 self.update_action(0)#0: idle
-                #shoot
+                #šauti
                 self.shoot()
             else:
                 if self.idling == False:
@@ -201,15 +201,15 @@ class Soldier(pygame.sprite.Sprite):
 
 
     def update_animation(self):
-        #update animation
+        #atnaujinti animaciją
         ANIMATION_COOLDOWN = 100
-        #update image depending on current frame
+        #atnaujinti nuotrauka pagal duota frame 
         self.image = self.animation_list[self.action][self.frame_index]
-        #check if enough time has passed since the last update
+        #patikrinti ar pakankamai laiko praėjo nuo paskutinio atnaujinimo
         if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
             self.update_time = pygame.time.get_ticks()
             self.frame_index += 1
-        #if the animation has run out the reset back to the start
+        #jei animacija baigėsi pradėti vėl nuo pradžių
         if self.frame_index >= len(self.animation_list[self.action]):
             if self.action == 3:
                 self.frame_index = len(self.animation_list[self.action]) - 1
@@ -251,7 +251,7 @@ class ItemBox(pygame.sprite.Sprite):
 
 
     def update(self):
-        #check if the player has picked up the box
+        #peržiūrėti ar veikėjas paėmė dėžutę
         if pygame.sprite.collide_rect(self, player):
             #check what kind of box it was
             if self.item_type == 'Health':
@@ -262,7 +262,7 @@ class ItemBox(pygame.sprite.Sprite):
                 player.ammo += 15
             elif self.item_type == 'Grenade':
                 player.grenades += 3
-            #delete the item box
+            #ištrinti daiktų dėžutę
             self.kill()
 
 
@@ -274,7 +274,7 @@ class HealthBar():
         self.max_health = max_health
 
     def draw(self, health):
-        #update with new health
+        #atnaujinti su nauja gyvybę
         self.health = health
         #calculate health ratio
         ratio = self.health / self.max_health
@@ -299,7 +299,7 @@ class Bullet(pygame.sprite.Sprite):
         if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
             self.kill()
 
-        #check collision with characters
+        #persižiūrėti susidūrimą su vaikėjais
         if pygame.sprite.spritecollide(player, bullet_group, False):
             if player.alive:
                 player.health -= 5
@@ -328,17 +328,17 @@ class Grenade(pygame.sprite.Sprite):
         dx = self.direction * self.speed
         dy = self.vel_y
 
-        #check collision with floor
+        #peržiūėti susidūrima su grindimis
         if self.rect.bottom + dy > 300:
             dy = 300 - self.rect.bottom
             self.speed = 0
 
-        #check collision with walls
+        #peržiūėti susidūrima su sienomis
         if self.rect.left + dx < 0 or self.rect.right + dx > SCREEN_WIDTH:
             self.direction *= -1
             dx = self.direction * self.speed
 
-        #update grenade position
+        #atnaujinti granatos poziciją
         self.rect.x += dx
         self.rect.y += dy
 
